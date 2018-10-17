@@ -19,7 +19,7 @@ import (
 func main() {
 	log.Println("main:", config.Conf)
 	ticker := time.NewTicker(time.Second * 1)
-	ticker1 := time.NewTicker(time.Second * 10)
+	ticker1 := time.NewTicker(time.Second * 2)
 	ticker2 := time.NewTicker(time.Second * 20)
 	go func() {
 		for _ = range ticker.C {
@@ -31,7 +31,7 @@ func main() {
 		select {
 		case <-ticker1.C:
 			if file, err := os.OpenFile(config.FileName, os.O_APPEND, 0666); err == nil {
-				file.WriteString(fmt.Sprintf("%d = %d", rand.Int(), rand.Int()))
+				file.WriteString(fmt.Sprintf("%d = %d   \n", rand.Int(), rand.Int()))
 				file.Close()
 			} else {
 				log.Println("main（）打开文件不存在",err)

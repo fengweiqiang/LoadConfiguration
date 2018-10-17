@@ -20,11 +20,13 @@ asd
 
  */
 var Conf map[string]string
+var confbak map[string]string
 var lock sync.Mutex
 
 var FileName = "LoadConfiguration.conf"
 //第一次启动初始化文件内容
-var Content=""
+var Content = ""
+
 func init() {
 	ticker := time.NewTicker(time.Second * 5)
 	var lastTime int64
@@ -43,11 +45,11 @@ func init() {
 	}
 	go func() {
 		for _ = range ticker.C {
-			file, err := os.OpenFile(FileName, os.O_CREATE|os.O_RDONLY, 0666)
+			file, err := os.OpenFile(FileName, os.O_RDONLY, 0666)
 			if err != nil {
 				log.Println("OpenFile()打开文件失败，重新创建文件--->")
-				os.Create(FileName)
-				return
+				create(confbak)
+				continue
 			}
 			fileInfo, err := file.Stat()
 			file.Close()
@@ -66,7 +68,7 @@ func init() {
 					return
 				}
 				lock.Lock()
-				Conf = m
+				Conf, confbak = m, m
 				//log.Println(CallBack)
 				lock.Unlock()
 				lastTime = curModifyTime
@@ -82,7 +84,7 @@ func parse() (m map[string]string, err error) {
 	defer file.Close()
 	if err != nil {
 		log.Println("parse()打开文件失败，重新创建文件--->")
-		os.Create(FileName)
+		create(confbak)
 		return
 	}
 	var lineNo int
@@ -121,4 +123,18 @@ func parse() (m map[string]string, err error) {
 	return
 }
 
+func create(c map[string]string) error {
+	if file, err := os.OpenFile(FileName, os.O_CREATE, 0666); err == nil {
+		if len(c) == 0 {
+			return nil
+		}
+		for key, value := range c {
+			file.WriteString(key+"="+value+" \n")
+		}
+		file.Close()
+	} else {
+		return err
+	}
 
+	return nil
+}
